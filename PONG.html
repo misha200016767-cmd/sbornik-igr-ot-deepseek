@@ -1,0 +1,783 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ARKANOID · Блоки · Pong стиль</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'VT323', monospace;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            background: #000000aa;
+            border-radius: clamp(20px, 5vw, 32px);
+            padding: clamp(12px, 3vw, 20px);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(2px);
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: clamp(12px, 3vw, 16px);
+            box-shadow: 0 0 0 2px #2ecc71, 0 0 0 4px #1f4f2b, 0 10px 30px rgba(0,0,0,0.5);
+            background-color: #010118;
+            width: 100%;
+            height: auto;
+            cursor: none;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: clamp(12px, 4vw, 18px);
+            margin-bottom: clamp(8px, 2vw, 12px);
+            gap: clamp(12px, 3vw, 20px);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .score-board {
+            display: flex;
+            gap: clamp(24px, 8vw, 48px);
+            background: #030614cc;
+            padding: clamp(6px, 2vw, 10px) clamp(16px, 5vw, 28px);
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid #2ecc7144;
+        }
+
+        .score {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: clamp(0.7rem, 3vw, 1.1rem);
+            letter-spacing: 2px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .score-value {
+            font-size: clamp(1.8rem, 8vw, 3rem);
+            font-weight: bold;
+            color: #2ecc71;
+            text-shadow: 0 0 8px #2ecc71aa;
+            line-height: 1;
+            font-family: 'Courier New', monospace;
+        }
+
+        .controls-panel {
+            background: #030614cc;
+            border-radius: 60px;
+            padding: clamp(6px, 2vw, 8px) clamp(12px, 4vw, 20px);
+            backdrop-filter: blur(4px);
+            border: 1px solid #2ecc7144;
+            display: flex;
+            gap: clamp(12px, 4vw, 24px);
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            font-weight: bold;
+            color: #bdc3c7;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls-panel span {
+            background: #1a2a32;
+            padding: 4px 12px;
+            border-radius: 32px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #2ecc71;
+            white-space: nowrap;
+        }
+
+        button {
+            background: #1f3a2b;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 4vw, 1.2rem);
+            padding: clamp(6px, 2vw, 8px) clamp(16px, 5vw, 24px);
+            border-radius: 40px;
+            color: #d0ffd0;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 6px black;
+            letter-spacing: 1px;
+            touch-action: manipulation;
+        }
+
+        button:hover {
+            background: #2ecc71;
+            color: #0a0f1e;
+            transform: scale(1.02);
+            box-shadow: 0 0 12px #2ecc71aa;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .status {
+            background: #010118aa;
+            border-radius: 32px;
+            padding: 6px 18px;
+            font-size: clamp(0.8rem, 3vw, 1rem);
+            font-weight: bold;
+            color: #f1c40f;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Мобильные сенсорные кнопки */
+        .touch-controls {
+            display: none;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .touch-btn {
+            background: #1a2a32cc;
+            backdrop-filter: blur(8px);
+            border: 2px solid #2ecc71;
+            border-radius: 60px;
+            padding: 12px 28px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2ecc71;
+            text-align: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.05s linear;
+            font-family: monospace;
+            box-shadow: 0 4px 12px black;
+        }
+
+        .touch-btn:active {
+            background: #2ecc71;
+            color: #0a0f1e;
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .controls-panel { display: none; }
+            .touch-controls { display: flex; }
+            canvas { cursor: default; }
+            .info-panel { flex-direction: column; gap: 12px; }
+            .score-board { width: 100%; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .touch-btn { padding: 8px 20px; font-size: 1.4rem; }
+            .touch-controls { gap: 12px; }
+        }
+
+        .desktop-hint {
+            text-align: center;
+            margin-top: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #5a6e7a;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <div class="game-container">
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        
+        <div class="info-panel">
+            <div class="score-board">
+                <div class="score">
+                    <div class="score-label">ОЧКИ</div>
+                    <div class="score-value" id="scoreValue">0</div>
+                </div>
+                <div class="score">
+                    <div class="score-label">БЛОКИ</div>
+                    <div class="score-value" id="blocksLeft">0</div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <span>◄ МЫШЬ / ПАЛЕЦ ►</span>
+                <span>◄ ЛЕВО / ПРАВО ►</span>
+                <span>␣ ПАУЗА</span>
+            </div>
+            
+            <button id="resetBtn">⟳ НОВАЯ ИГРА</button>
+        </div>
+        
+        <!-- Сенсорные кнопки для мобильных устройств -->
+        <div class="touch-controls" id="touchControls">
+            <div class="touch-btn" id="touchLeftBtn">◄ ЛЕВО</div>
+            <div class="touch-btn" id="touchRightBtn">ПРАВО ►</div>
+            <div class="touch-btn" id="touchPauseBtn">⏸ ПАУЗА</div>
+        </div>
+        
+        <div class="status" id="gameStatus">● РАЗБИВАЙ БЛОКИ! ПЛАТФОРМА ВНИЗУ ●</div>
+        <div class="desktop-hint">✦ Управление: мышь / палец (двигай платформу) | Стрелки влево/вправо | Пробел - пауза ✦</div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // -------------------- НАСТРОЙКИ --------------------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // РАЗМЕРЫ ИГРОВОГО ПОЛЯ (1000x600)
+        const W = 1000;
+        const H = 600;
+        canvas.width = W;
+        canvas.height = H;
+        
+        // ---------- ПЛАТФОРМА (внизу) ----------
+        const PADDLE_W = 140;
+        const PADDLE_H = 16;
+        let paddleX = W/2 - PADDLE_W/2;
+        const PADDLE_SPEED = 12;
+        
+        // ---------- МЯЧ ----------
+        const BALL_SIZE = 12;
+        let ballX = W/2;
+        let ballY = H - 50;      // появляется на платформе
+        let ballVX = 0;
+        let ballVY = 0;
+        let ballLaunched = false;   // запущен ли мяч или лежит на платформе
+        
+        const BASE_BALL_SPEED = 5.2;
+        
+        // ---------- БЛОКИ ----------
+        const BRICK_ROWS = 5;
+        const BRICK_COLS = 9;
+        const BRICK_GAP = 2;
+        let brickWidth = (W - 60) / BRICK_COLS - BRICK_GAP;
+        const brickHeight = 18;
+        
+        let bricks = [];
+        let totalBricks = 0;
+        
+        // Цвета блоков (по рядам)
+        const brickColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db'];
+        
+        // ---------- ИГРОВЫЕ ПЕРЕМЕННЫЕ ----------
+        let score = 0;
+        let gameActive = true;
+        let gamePaused = false;
+        let gameWin = false;      // победа (все блоки сбиты)
+        
+        // Управление с клавиатуры
+        let leftPressed = false;
+        let rightPressed = false;
+        
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+        function updateUI() {
+            document.getElementById('scoreValue').innerText = score;
+            document.getElementById('blocksLeft').innerText = totalBricks;
+        }
+        
+        // Инициализация блоков
+        function initBricks() {
+            bricks = [];
+            brickWidth = (W - 60) / BRICK_COLS - BRICK_GAP;
+            for(let row = 0; row < BRICK_ROWS; row++) {
+                bricks[row] = [];
+                for(let col = 0; col < BRICK_COLS; col++) {
+                    bricks[row][col] = { active: true, color: brickColors[row % brickColors.length] };
+                }
+            }
+            updateBricksCount();
+        }
+        
+        function updateBricksCount() {
+            let count = 0;
+            for(let row = 0; row < BRICK_ROWS; row++) {
+                for(let col = 0; col < BRICK_COLS; col++) {
+                    if(bricks[row][col].active) count++;
+                }
+            }
+            totalBricks = count;
+            updateUI();
+            return count;
+        }
+        
+        // Проверка победы
+        function checkVictory() {
+            if(totalBricks === 0 && !gameWin && gameActive) {
+                gameWin = true;
+                gameActive = false;
+                gamePaused = false;
+                document.getElementById('gameStatus').innerHTML = '✨ ПОБЕДА! ВСЕ БЛОКИ РАЗРУШЕНЫ! ✨';
+                document.getElementById('gameStatus').style.color = '#f1c40f';
+                return true;
+            }
+            return false;
+        }
+        
+        // Полный сброс игры
+        function fullReset() {
+            // Сброс блоков
+            initBricks();
+            // Сброс счета
+            score = 0;
+            updateUI();
+            // Платформа по центру
+            paddleX = W/2 - PADDLE_W/2;
+            // Мяч на платформе, не запущен
+            ballX = paddleX + PADDLE_W/2;
+            ballY = H - PADDLE_H - BALL_SIZE/2 - 2;
+            ballVX = 0;
+            ballVY = 0;
+            ballLaunched = false;
+            gameActive = true;
+            gamePaused = false;
+            gameWin = false;
+            document.getElementById('gameStatus').innerHTML = '● ИГРА АКТИВНА ●';
+            document.getElementById('gameStatus').style.color = '#f1c40f';
+            leftPressed = false;
+            rightPressed = false;
+        }
+        
+        // Запуск мяча (при первом движении или после клика / пробела)
+        function launchBall() {
+            if(!ballLaunched && !gamePaused && gameActive && !gameWin) {
+                ballLaunched = true;
+                // случайное направление: вверх и чуть влево/вправо
+                let dirX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.8 + 0.6);
+                ballVX = BASE_BALL_SPEED * dirX;
+                ballVY = -BASE_BALL_SPEED;
+                // гарантия, что скорость не слишком маленькая
+                if(Math.abs(ballVX) < 2.5) ballVX = ballVX > 0 ? 3.2 : -3.2;
+            }
+        }
+        
+        // Столкновение с блоками (разрушение и отскок)
+        function handleBrickCollision() {
+            let hit = false;
+            const ballLeft = ballX - BALL_SIZE/2;
+            const ballRight = ballX + BALL_SIZE/2;
+            const ballTop = ballY - BALL_SIZE/2;
+            const ballBottom = ballY + BALL_SIZE/2;
+            
+            for(let row = 0; row < BRICK_ROWS; row++) {
+                for(let col = 0; col < BRICK_COLS; col++) {
+                    if(bricks[row][col].active) {
+                        const brickX = 30 + col * (brickWidth + BRICK_GAP);
+                        const brickY = 45 + row * (brickHeight + BRICK_GAP);
+                        const brickRight = brickX + brickWidth;
+                        const brickBottom = brickY + brickHeight;
+                        
+                        if(ballRight > brickX && ballLeft < brickRight && ballBottom > brickY && ballTop < brickBottom) {
+                            // разрушаем блок
+                            bricks[row][col].active = false;
+                            hit = true;
+                            score += 10;
+                            updateUI();
+                            updateBricksCount();
+                            
+                            // Определяем сторону столкновения для корректного отскока
+                            const overlapLeft = ballRight - brickX;
+                            const overlapRight = brickRight - ballLeft;
+                            const overlapTop = ballBottom - brickY;
+                            const overlapBottom = brickBottom - ballTop;
+                            
+                            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                            if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                                ballVX = -ballVX;   // отскок по горизонтали
+                            } else {
+                                ballVY = -ballVY;   // отскок по вертикали
+                            }
+                            
+                            // Небольшая корректировка позиции, чтобы избежать застревания
+                            if (minOverlap === overlapLeft) ballX = brickX - BALL_SIZE/2;
+                            else if (minOverlap === overlapRight) ballX = brickRight + BALL_SIZE/2;
+                            else if (minOverlap === overlapTop) ballY = brickY - BALL_SIZE/2;
+                            else if (minOverlap === overlapBottom) ballY = brickBottom + BALL_SIZE/2;
+                            
+                            // Проверка победы после разрушения блока
+                            if(checkVictory()) return true;
+                            return true; // один блок за столкновение
+                        }
+                    }
+                }
+            }
+            return hit;
+        }
+        
+        // Обновление логики (движение, столкновения)
+        function updateGame() {
+            if(!gameActive || gamePaused || gameWin) return;
+            
+            // ----- Управление платформой (клавиши) -----
+            if(leftPressed && paddleX > 0) {
+                paddleX -= PADDLE_SPEED;
+                if(paddleX < 0) paddleX = 0;
+                // если мяч ещё не запущен, двигаем его вместе с платформой
+                if(!ballLaunched) {
+                    ballX = paddleX + PADDLE_W/2;
+                }
+            }
+            if(rightPressed && paddleX < W - PADDLE_W) {
+                paddleX += PADDLE_SPEED;
+                if(paddleX > W - PADDLE_W) paddleX = W - PADDLE_W;
+                if(!ballLaunched) {
+                    ballX = paddleX + PADDLE_W/2;
+                }
+            }
+            
+            // Если мяч не запущен — ничего не двигаем
+            if(!ballLaunched) return;
+            
+            // ----- Движение мяча -----
+            ballX += ballVX;
+            ballY += ballVY;
+            
+            // Столкновение со стенами (лево, право, верх)
+            if(ballX - BALL_SIZE/2 <= 0) {
+                ballX = BALL_SIZE/2;
+                ballVX = -ballVX;
+            }
+            if(ballX + BALL_SIZE/2 >= W) {
+                ballX = W - BALL_SIZE/2;
+                ballVX = -ballVX;
+            }
+            if(ballY - BALL_SIZE/2 <= 0) {
+                ballY = BALL_SIZE/2;
+                ballVY = -ballVY;
+            }
+            
+            // Столкновение с платформой (внизу)
+            if(ballVY > 0) { // только когда мяч летит вниз
+                const ballBottom = ballY + BALL_SIZE/2;
+                const paddleTop = H - PADDLE_H;
+                if(ballBottom >= paddleTop && ballY - BALL_SIZE/2 <= paddleTop + PADDLE_H) {
+                    if(ballX + BALL_SIZE/2 > paddleX && ballX - BALL_SIZE/2 < paddleX + PADDLE_W) {
+                        // Отскок от ракетки с изменением угла в зависимости от места удара
+                        let hitPos = (ballX - paddleX) / PADDLE_W; // 0..1
+                        let angle = (hitPos - 0.5) * 1.6;   // -0.8..0.8
+                        let speed = Math.hypot(ballVX, ballVY);
+                        speed = Math.min(speed + 0.2, 10.5);
+                        let newAngle = angle * (Math.PI / 2.2);
+                        let newVX = Math.sin(newAngle) * speed;
+                        let newVY = -Math.cos(newAngle) * speed;
+                        ballVX = newVX;
+                        ballVY = newVY;
+                        // позиционирование, чтобы не залипнуть
+                        ballY = paddleTop - BALL_SIZE/2;
+                        // доп защита от нулевой горизонтальной скорости
+                        if(Math.abs(ballVX) < 1.2) ballVX = ballVX > 0 ? 1.8 : -1.8;
+                    }
+                }
+            }
+            
+            // Столкновение с блоками (уже после движения мяча)
+            handleBrickCollision();
+            
+            // Проверка проигрыша (мяч упал ниже платформы)
+            if(ballY + BALL_SIZE/2 >= H) {
+                // Потеря мяча: возвращаем на платформу, игра продолжается, но без уменьшения жизней (просто перезапуск)
+                ballLaunched = false;
+                ballX = paddleX + PADDLE_W/2;
+                ballY = H - PADDLE_H - BALL_SIZE/2 - 2;
+                ballVX = 0;
+                ballVY = 0;
+                gameActive = true;   // игра активна, просто мяч не запущен
+                // сообщение
+                document.getElementById('gameStatus').innerHTML = '💔 МЯЧ УПАЛ! Кликни/Нажми ПРОБЕЛ чтобы запустить 💔';
+                document.getElementById('gameStatus').style.color = '#e67e22';
+                setTimeout(() => {
+                    if(!gameWin && gameActive && !ballLaunched && !gamePaused) {
+                        document.getElementById('gameStatus').innerHTML = '● РАЗБИВАЙ БЛОКИ! ПЛАТФОРМА ВНИЗУ ●';
+                        document.getElementById('gameStatus').style.color = '#f1c40f';
+                    }
+                }, 1500);
+                return;
+            }
+            
+            // дополнительная проверка победы после обработки блоков
+            checkVictory();
+        }
+        
+        // ---------- ОТРИСОВКА ВСЕГО ----------
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            // Фон
+            ctx.fillStyle = '#010118';
+            ctx.fillRect(0, 0, W, H);
+            
+            // Декоративная сетка
+            ctx.beginPath();
+            ctx.setLineDash([10, 18]);
+            ctx.strokeStyle = '#2ecc7144';
+            ctx.lineWidth = 2;
+            ctx.moveTo(W/2, 0);
+            ctx.lineTo(W/2, H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // ----- РИСУЕМ БЛОКИ -----
+            for(let row = 0; row < BRICK_ROWS; row++) {
+                for(let col = 0; col < BRICK_COLS; col++) {
+                    if(bricks[row][col].active) {
+                        const brickX = 30 + col * (brickWidth + BRICK_GAP);
+                        const brickY = 45 + row * (brickHeight + BRICK_GAP);
+                        ctx.fillStyle = bricks[row][col].color;
+                        ctx.shadowBlur = 3;
+                        ctx.shadowColor = "rgba(0,0,0,0.4)";
+                        ctx.fillRect(brickX, brickY, brickWidth, brickHeight);
+                        // блик
+                        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                        ctx.fillRect(brickX, brickY, brickWidth, 4);
+                        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                        ctx.fillRect(brickX, brickY + brickHeight - 3, brickWidth, 3);
+                    }
+                }
+            }
+            ctx.shadowBlur = 0;
+            
+            // ----- ПЛАТФОРМА (внизу) -----
+            ctx.fillStyle = '#2ecc71';
+            ctx.shadowColor = '#2ecc71aa';
+            ctx.fillRect(paddleX, H - PADDLE_H, PADDLE_W, PADDLE_H);
+            ctx.fillStyle = '#58d68d';
+            ctx.fillRect(paddleX, H - PADDLE_H, PADDLE_W, 5);
+            ctx.fillStyle = '#1e8449';
+            ctx.fillRect(paddleX, H - 4, PADDLE_W, 4);
+            
+            // ----- МЯЧ -----
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = '#f5f5dc';
+            ctx.shadowColor = '#fff9c4';
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, BALL_SIZE/2, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#ffeaa7';
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, BALL_SIZE/3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Подсказка "запустить мяч", если он ещё лежит
+            if(!ballLaunched && !gameWin && gameActive && !gamePaused) {
+                ctx.font = 'bold 20px "Courier New"';
+                ctx.fillStyle = '#f1c40fcc';
+                ctx.textAlign = "center";
+                ctx.fillText("▶ НАЖМИ ПРОБЕЛ / КНОПКУ, ЧТОБЫ ЗАПУСТИТЬ МЯЧ", W/2, H - 70);
+                ctx.font = '14px monospace';
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillText("(также кликни мышью/пальцем по экрану)", W/2, H - 45);
+            }
+            
+            // Пауза
+            if(gamePaused && gameActive && !gameWin) {
+                ctx.font = 'bold 38px "Courier New"';
+                ctx.fillStyle = '#f1c40f';
+                ctx.textAlign = "center";
+                ctx.fillText("⏸ ПАУЗА", W/2, H/2 - 40);
+                ctx.font = '18px monospace';
+                ctx.fillStyle = '#bdc3c7';
+                ctx.fillText("Нажмите ПРОБЕЛ / кнопку ПАУЗА", W/2, H/2 + 20);
+            }
+            
+            // Экран победы
+            if(gameWin) {
+                ctx.font = 'bold 44px "Courier New"';
+                ctx.fillStyle = '#f39c12';
+                ctx.shadowBlur = 6;
+                ctx.fillText("★ ПОБЕДА! ★", W/2, H/2 - 40);
+                ctx.font = '20px monospace';
+                ctx.fillStyle = '#2ecc71';
+                ctx.fillText("Все блоки разрушены! Нажми «НОВАЯ ИГРА»", W/2, H/2 + 30);
+                ctx.fillStyle = '#bdc3c7';
+                ctx.font = '16px monospace';
+                ctx.fillText("Нажми кнопку сброса, чтобы сыграть снова", W/2, H/2 + 70);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Тени убраны
+            ctx.textAlign = "left";
+        }
+        
+        // ---------- УПРАВЛЕНИЕ (КЛАВИАТУРА, МЫШЬ, ТАЧ) ----------
+        function handleKeyDown(e) {
+            const key = e.key;
+            if(key === 'ArrowLeft' || key === 'Left' || key === 'a' || key === 'A') {
+                leftPressed = true;
+                e.preventDefault();
+            }
+            else if(key === 'ArrowRight' || key === 'Right' || key === 'd' || key === 'D') {
+                rightPressed = true;
+                e.preventDefault();
+            }
+            else if(key === ' ' || key === 'Space') {
+                e.preventDefault();
+                if(gameWin) return;
+                if(!gameActive && !gameWin) {
+                    // если игра не активна (но не победа) - сброс? нет, просто игнор
+                    return;
+                }
+                if(gamePaused) {
+                    gamePaused = false;
+                    document.getElementById('gameStatus').innerHTML = '● ИГРА АКТИВНА ●';
+                    document.getElementById('gameStatus').style.color = '#f1c40f';
+                } else {
+                    if(!ballLaunched && !gameWin) {
+                        launchBall();
+                    } else {
+                        togglePause();
+                    }
+                }
+            }
+        }
+        
+        function handleKeyUp(e) {
+            const key = e.key;
+            if(key === 'ArrowLeft' || key === 'Left' || key === 'a' || key === 'A') {
+                leftPressed = false;
+                e.preventDefault();
+            }
+            else if(key === 'ArrowRight' || key === 'Right' || key === 'd' || key === 'D') {
+                rightPressed = false;
+                e.preventDefault();
+            }
+        }
+        
+        function togglePause() {
+            if(gameWin) return;
+            if(!gameActive) return;
+            gamePaused = !gamePaused;
+            if(gamePaused) {
+                document.getElementById('gameStatus').innerHTML = '⏸ ПАУЗА';
+            } else {
+                document.getElementById('gameStatus').innerHTML = '● ИГРА АКТИВНА ●';
+            }
+        }
+        
+        // Управление платформой через мышь/тач (drag)
+        function handleCanvasMove(clientX) {
+            if(gameWin) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width;
+            let mouseX = (clientX - rect.left) * scaleX;
+            let newPaddleX = mouseX - PADDLE_W/2;
+            newPaddleX = Math.min(Math.max(newPaddleX, 0), W - PADDLE_W);
+            paddleX = newPaddleX;
+            if(!ballLaunched) {
+                ballX = paddleX + PADDLE_W/2;
+            }
+        }
+        
+        function onMouseMove(e) {
+            handleCanvasMove(e.clientX);
+        }
+        
+        function onTouchMove(e) {
+            e.preventDefault();
+            if(e.touches.length) {
+                handleCanvasMove(e.touches[0].clientX);
+            }
+        }
+        
+        function onTouchStart(e) {
+            e.preventDefault();
+            if(!ballLaunched && !gameWin && gameActive && !gamePaused) {
+                launchBall();
+            }
+            if(e.touches.length) handleCanvasMove(e.touches[0].clientX);
+        }
+        
+        function onMouseDown(e) {
+            if(!ballLaunched && !gameWin && gameActive && !gamePaused) {
+                launchBall();
+            }
+            handleCanvasMove(e.clientX);
+        }
+        
+        // ---------- ИНИЦИАЛИЗАЦИЯ И АНИМАЦИЯ ----------
+        const resetBtn = document.getElementById('resetBtn');
+        const touchLeftBtn = document.getElementById('touchLeftBtn');
+        const touchRightBtn = document.getElementById('touchRightBtn');
+        const touchPauseBtn = document.getElementById('touchPauseBtn');
+        
+        // Сенсорные кнопки для мобильных
+        let touchLeftInterval = null, touchRightInterval = null;
+        function startLeft() { if(!gameWin && gameActive && !gamePaused) leftPressed = true; }
+        function stopLeft() { leftPressed = false; }
+        function startRight() { if(!gameWin && gameActive && !gamePaused) rightPressed = true; }
+        function stopRight() { rightPressed = false; }
+        
+        function init() {
+            fullReset();
+            
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+            canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+            canvas.addEventListener('touchcancel', (e) => e.preventDefault());
+            
+            resetBtn.addEventListener('click', () => { fullReset(); });
+            
+            if(touchLeftBtn) {
+                touchLeftBtn.addEventListener('mousedown', startLeft);
+                touchLeftBtn.addEventListener('mouseup', stopLeft);
+                touchLeftBtn.addEventListener('mouseleave', stopLeft);
+                touchLeftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startLeft(); });
+                touchLeftBtn.addEventListener('touchend', stopLeft);
+                
+                touchRightBtn.addEventListener('mousedown', startRight);
+                touchRightBtn.addEventListener('mouseup', stopRight);
+                touchRightBtn.addEventListener('mouseleave', stopRight);
+                touchRightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRight(); });
+                touchRightBtn.addEventListener('touchend', stopRight);
+                
+                touchPauseBtn.addEventListener('click', () => { if(!gameWin && gameActive) togglePause(); });
+            }
+            
+            function gameLoop() {
+                updateGame();
+                draw();
+                requestAnimationFrame(gameLoop);
+            }
+            gameLoop();
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>
