@@ -1,0 +1,484 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>L-Click | Радужный кликер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a0a1a, #000000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            padding: 1rem;
+        }
+
+        /* Главный контейнер */
+        .game-container {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(15px);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.2);
+        }
+
+        /* Радужная анимация */
+        @keyframes rainbow {
+            0% { text-shadow: 0 0 5px red, 0 0 10px orange; }
+            25% { text-shadow: 0 0 5px yellow, 0 0 10px green; }
+            50% { text-shadow: 0 0 5px cyan, 0 0 10px blue; }
+            75% { text-shadow: 0 0 5px indigo, 0 0 10px violet; }
+            100% { text-shadow: 0 0 5px red, 0 0 10px orange; }
+        }
+
+        .rainbow-text {
+            animation: rainbow 2s ease infinite;
+            font-weight: bold;
+        }
+
+        /* Монетка */
+        .coin {
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle at 35% 35%, #ffd700, #ff8c00, #ff6600);
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 15px orange;
+            cursor: pointer;
+            transition: 0.05s linear;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+        .coin:active {
+            transform: scale(0.94);
+        }
+
+        /* Баланс */
+        .balance {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, gold, #ffaa00, #ff6600);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 10px 0;
+        }
+
+        /* Статистика */
+        .stats {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 1.2rem;
+            padding: 12px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stat-card {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffcc44;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        /* Кнопки улучшений */
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        button {
+            background: linear-gradient(90deg, #3a0a5a, #1a0a2e);
+            border: 1px solid #ff44cc;
+            padding: 12px 10px;
+            border-radius: 60px;
+            color: #ffccff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #ff44cc, #aa00ff);
+            color: white;
+            box-shadow: 0 0 12px magenta;
+            transform: scale(1.01);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Автокликер (пассивный доход) */
+        .auto-section {
+            background: rgba(255, 0, 255, 0.1);
+            border-radius: 1rem;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        /* Кнопка сохранения */
+        .save-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: cyan;
+            color: cyan;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .combo {
+            font-size: 1rem;
+            color: #ff66ff;
+            margin: 8px 0;
+        }
+
+        footer {
+            font-size: 0.6rem;
+            color: #555;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1 class="rainbow-text">🌈 L-CLICK 🌈</h1>
+    <p style="color: #aaa; font-size: 0.8rem;">Кликай по монетке и качай силу!</p>
+
+    <!-- Монетка -->
+    <div class="coin" id="coin">
+        🪙
+    </div>
+
+    <!-- Баланс -->
+    <div class="balance" id="balance">0</div>
+
+    <!-- Статистика -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value" id="clickPower">1</div>
+            <div class="stat-label">💪 Сила клика</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="coinsPerSecond">0</div>
+            <div class="stat-label">⚡ Монет/сек</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalClicks">0</div>
+            <div class="stat-label">🖱️ Всего кликов</div>
+        </div>
+    </div>
+
+    <!-- Комбо -->
+    <div class="combo" id="combo"></div>
+
+    <!-- Магазин улучшений -->
+    <div class="upgrades">
+        <button id="upgradeClick">🔨 Улучшить клик<br><span id="clickCost">10</span> 🪙</button>
+        <button id="upgradeMultiplier">✨ Множитель x2<br><span id="multiCost">50</span> 🪙</button>
+    </div>
+
+    <!-- Автокликер -->
+    <div class="auto-section">
+        <button id="buyAutoClicker">🤖 Купить автокликер<br><span id="autoCost">100</span> 🪙 (+1 мон/сек)</button>
+        <button id="buyStrongAuto">⚡ Мощный автокликер<br><span id="strongAutoCost">500</span> 🪙 (+5 мон/сек)</button>
+    </div>
+
+    <!-- Управление -->
+    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+        <button id="saveBtn" class="save-btn">💾 Сохранить</button>
+        <button id="resetBtn" class="save-btn" style="border-color: #ff6666;">🔄 Сброс</button>
+    </div>
+
+    <footer>🌈 L-CLICK | Демо-режим | Настоящих денег нет</footer>
+</div>
+
+<script>
+    // ======================== L-CLICK - КЛИКЕР НА HTML ========================
+    
+    // Игровые переменные
+    let coins = 0;
+    let clickPower = 1;
+    let clickMultiplier = 1;
+    let coinsPerSecond = 0;
+    let totalClicks = 0;
+    let combo = 0;
+    let lastClickTime = 0;
+    
+    // Стоимость улучшений
+    let clickCost = 10;
+    let multiCost = 50;
+    let autoCost = 100;
+    let strongAutoCost = 500;
+    
+    // DOM элементы
+    const coinEl = document.getElementById('coin');
+    const balanceEl = document.getElementById('balance');
+    const clickPowerEl = document.getElementById('clickPower');
+    const coinsPerSecondEl = document.getElementById('coinsPerSecond');
+    const totalClicksEl = document.getElementById('totalClicks');
+    const comboEl = document.getElementById('combo');
+    
+    // Форматирование чисел (K, M, B)
+    function formatNumber(num) {
+        if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'B';
+        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+        if (num >= 1_000) return (num / 1_000).toFixed(2) + 'K';
+        return Math.floor(num).toString();
+    }
+    
+    // Обновление интерфейса
+    function updateUI() {
+        balanceEl.textContent = formatNumber(coins);
+        clickPowerEl.textContent = (clickPower * clickMultiplier).toFixed(1);
+        coinsPerSecondEl.textContent = coinsPerSecond;
+        totalClicksEl.textContent = totalClicks;
+        
+        // Обновляем цены в кнопках
+        document.getElementById('clickCost').textContent = formatNumber(clickCost);
+        document.getElementById('multiCost').textContent = formatNumber(multiCost);
+        document.getElementById('autoCost').textContent = formatNumber(autoCost);
+        document.getElementById('strongAutoCost').textContent = formatNumber(strongAutoCost);
+    }
+    
+    // Добавление монет
+    function addCoins(amount) {
+        coins += amount;
+        updateUI();
+    }
+    
+    // Трата монет
+    function spendCoins(amount) {
+        if (coins >= amount) {
+            coins -= amount;
+            updateUI();
+            return true;
+        }
+        return false;
+    }
+    
+    // Клик по монетке
+    function clickCoin() {
+        const now = Date.now();
+        if (now - lastClickTime < 500) {
+            combo++;
+        } else {
+            combo = 1;
+        }
+        lastClickTime = now;
+        
+        let comboBonus = 1 + (combo * 0.05);
+        if (comboBonus > 3) comboBonus = 3;
+        
+        const earn = clickPower * clickMultiplier * comboBonus;
+        addCoins(earn);
+        totalClicks++;
+        
+        // Визуальный эффект комбо
+        if (combo >= 5) {
+            comboEl.textContent = `🔥 x${combo} КОМБО! +${(comboBonus * 100 - 100).toFixed(0)}% 🔥`;
+        } else if (combo >= 2) {
+            comboEl.textContent = `⚡ x${combo} комбо +${((comboBonus-1)*100).toFixed(0)}%`;
+        } else {
+            comboEl.textContent = '';
+        }
+        
+        updateUI();
+        
+        // Анимация монетки
+        coinEl.style.transform = 'scale(0.94)';
+        setTimeout(() => { coinEl.style.transform = 'scale(1)'; }, 80);
+    }
+    
+    // Улучшение силы клика
+    function upgradeClick() {
+        if (spendCoins(clickCost)) {
+            clickPower += 1;
+            clickCost = Math.floor(clickCost * 1.5);
+            updateUI();
+            showToast('🔨 Сила клика увеличена!');
+        } else {
+            showToast('❌ Не хватает монет!');
+        }
+    }
+    
+    // Улучшение множителя (x2)
+    function upgradeMultiplier() {
+        if (spendCoins(multiCost)) {
+            clickMultiplier *= 2;
+            multiCost = Math.floor(multiCost * 2.5);
+            updateUI();
+            showToast(`✨ Множитель x${clickMultiplier}!`);
+        } else {
+            showToast('❌ Не хватает монет!');
+        }
+    }
+    
+    // Покупка автокликера (+1 мон/сек)
+    function buyAutoClicker() {
+        if (spendCoins(autoCost)) {
+            coinsPerSecond += 1;
+            autoCost = Math.floor(autoCost * 1.8);
+            updateUI();
+            showToast('🤖 Автокликер куплен! +1 мон/сек');
+        } else {
+            showToast('❌ Не хватает монет!');
+        }
+    }
+    
+    // Покупка мощного автокликера (+5 мон/сек)
+    function buyStrongAuto() {
+        if (spendCoins(strongAutoCost)) {
+            coinsPerSecond += 5;
+            strongAutoCost = Math.floor(strongAutoCost * 2);
+            updateUI();
+            showToast('⚡ Мощный автокликер! +5 мон/сек');
+        } else {
+            showToast('❌ Не хватает монет!');
+        }
+    }
+    
+    // Всплывающее уведомление
+    let toastTimeout;
+    function showToast(msg) {
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.8);
+                color: #ffccff;
+                padding: 10px 20px;
+                border-radius: 40px;
+                font-size: 0.9rem;
+                z-index: 1000;
+                border: 1px solid magenta;
+                backdrop-filter: blur(8px);
+                pointer-events: none;
+                transition: 0.3s;
+                opacity: 0;
+            `;
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 1500);
+    }
+    
+    // Пассивный доход (каждую секунду)
+    setInterval(() => {
+        if (coinsPerSecond > 0) {
+            addCoins(coinsPerSecond);
+            // Маленькая анимация дохода
+            if (coinsPerSecond > 0) {
+                const cpsEl = document.getElementById('coinsPerSecond');
+                if (cpsEl) cpsEl.style.transform = 'scale(1.1)';
+                setTimeout(() => { if(cpsEl) cpsEl.style.transform = 'scale(1)'; }, 200);
+            }
+        }
+    }, 1000);
+    
+    // Сохранение игры в localStorage
+    function saveGame() {
+        const saveData = {
+            coins, clickPower, clickMultiplier, coinsPerSecond, totalClicks,
+            clickCost, multiCost, autoCost, strongAutoCost
+        };
+        localStorage.setItem('lclick_save', JSON.stringify(saveData));
+        showToast('💾 Игра сохранена!');
+    }
+    
+    // Загрузка игры
+    function loadGame() {
+        const saveData = localStorage.getItem('lclick_save');
+        if (saveData) {
+            try {
+                const data = JSON.parse(saveData);
+                coins = data.coins || 0;
+                clickPower = data.clickPower || 1;
+                clickMultiplier = data.clickMultiplier || 1;
+                coinsPerSecond = data.coinsPerSecond || 0;
+                totalClicks = data.totalClicks || 0;
+                clickCost = data.clickCost || 10;
+                multiCost = data.multiCost || 50;
+                autoCost = data.autoCost || 100;
+                strongAutoCost = data.strongAutoCost || 500;
+                updateUI();
+                showToast('📀 Прогресс загружен!');
+            } catch(e) {}
+        }
+    }
+    
+    // Сброс игры
+    function resetGame() {
+        if (confirm('Точно сбросить весь прогресс? Все монеты пропадут!')){
+            coins = 0;
+            clickPower = 1;
+            clickMultiplier = 1;
+            coinsPerSecond = 0;
+            totalClicks = 0;
+            combo = 0;
+            clickCost = 10;
+            multiCost = 50;
+            autoCost = 100;
+            strongAutoCost = 500;
+            updateUI();
+            comboEl.textContent = '';
+            localStorage.removeItem('lclick_save');
+            showToast('🔄 Прогресс сброшен!');
+        }
+    }
+    
+    // Назначение обработчиков кнопок
+    document.getElementById('upgradeClick').onclick = upgradeClick;
+    document.getElementById('upgradeMultiplier').onclick = upgradeMultiplier;
+    document.getElementById('buyAutoClicker').onclick = buyAutoClicker;
+    document.getElementById('buyStrongAuto').onclick = buyStrongAuto;
+    document.getElementById('saveBtn').onclick = saveGame;
+    document.getElementById('resetBtn').onclick = resetGame;
+    coinEl.onclick = clickCoin;
+    
+    // Загружаем сохранение при старте
+    loadGame();
+    
+    // Добавляем эффект пульсации для монетки
+    setInterval(() => {
+        coinEl.style.boxShadow = '0 0 35px rgba(255, 215, 0, 0.8)';
+        setTimeout(() => {
+            coinEl.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.5)';
+        }, 300);
+    }, 2000);
+</script>
+</body>
+</html>
